@@ -1,0 +1,13 @@
+from zipfile import ZipFile
+import json
+
+dict = {
+    'executable': 'Popcorn-Time',
+    'icon': 'src/app/icon.png',
+    'name': 'Popcorn Time'
+}
+
+data = json.dumps(dict)
+
+with ZipFile('test-pt.sol', 'w') as pkg:
+    pkg.writestr('setting.json', data)
