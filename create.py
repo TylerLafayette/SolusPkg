@@ -26,6 +26,7 @@ class Base:
 
             # -Output Button
         self.outputBtn = gtk.Button(label="Choose output")
+        self.outputBtn.set_sensitive(False)
         self.outputBtn.set_size_request(200,100)
         self.outputBtn.connect("clicked", self.promptOutput)
         self.box1.pack_start(self.outputBtn, fill=False)
@@ -48,7 +49,7 @@ class Base:
         self.window.add(self.box0)
         self.box0.show()
         self.window.set_title("Solus Package Creator")
-        self.window.resize(800, 600)
+        self.window.resize(600, 400)
         self.window.show_all()
         self.window.connect("destroy", self.destroy)
     def promptFolder(self, btn=None, recurse=False):
@@ -60,6 +61,7 @@ class Base:
             self.path = self.chooser.get_filename()
             if os.path.isfile(self.path + '/settings.json'):
                 self.chooser.destroy()
+                self.outputBtn.set_sensitive(True)
                 self.folderLabel.set_label(self.path)
             else:
                 message = gtk.MessageDialog(parent=None,
@@ -87,41 +89,32 @@ class Base:
         if recurse == False:
             self.createSaveDialog()
         response = self.saveDialog.run()
-        # if response == gtk.RESPONSE_OK:
-        #     self.path = self.saveDialog.get_filename()
-        #     if os.path.isfile(self.path + '/settings.json'):
-        #         self.saveDialog.destroy()
-        #         self.folderLabel.set_label(self.path)
-        #     else:
-        #         message = gtk.MessageDialog(parent=None,
-        #                     flags=0,
-        #                     type=gtk.MESSAGE_ERROR,
-        #                     buttons=gtk.BUTTONS_OK,
-        #                     message_format=None)
-        #         message.set_markup("No configuration file detected within directory.")
-        #         response = message.run()
-        #         if response == gtk.RESPONSE_OK:
-        #             message.destroy()
-        #             # self.saveDialog.destroy()
-        #             self.promptFolder(recurse=True)
-        # elif response == gtk.RESPONSE_CANCEL:
-        #     print 'No folder selected'
-        print response
+        if response == gtk.RESPONSE_OK:
+            self.filename = self.saveDialog.get_filename()
+            if not self.filename[-4:] == '.sol':
+                self.filename += '.sol'
+            createPkg(self.filename, self.path)
+        elif response == gtk.RESPONSE_CANCEL:
+            print 'No folder selected'
         self.saveDialog.destroy()
     def main(self):
         gtk.main()
 
+def createPkg(filename, folder):
+    with ZipFile(filename, 'w') as pkg:
+        for dirname, subdirs, files in os.walk(folder):
+            print dirname
+            print 'sub'
+            print subdirs
+            print 'fi'
+            print files
+            relDir = os.path.relpath(dirname, folder)
+            pkg.write(dirname, relDir)
+            for file in files:
+                pkg.write(os.path.join(dirname, file), os.path.join(relDir, file))
+
+        # pkg.writestr('setting.json', data)
+
 if __name__ == "__main__":
     base = Base()
     base.main()
-
-dict = {
-    'executable': 'atom',
-    'icon': 'src/app/icon.png',
-    'name': 'Atom'
-}
-
-data = json.dumps(dict)
-
-with ZipFile('test-pt.sol', 'w') as pkg:
-    pkg.writestr('setting.json', data)
