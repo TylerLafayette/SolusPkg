@@ -15,7 +15,11 @@ class Base:
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
         self.chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
         response = self.chooser.run()
-        print(response)
+        if response == gtk.RESPONSE_OK:
+            print self.chooser.get_filename(), 'selected'
+        elif response == gtk.RESPONSE_CANCEL:
+            print 'No folder selected'
+        self.chooser.destroy()
         fixed = gtk.Fixed()
         # fixed.put(self.chooser, 50, 50)
         self.window.show_all()
