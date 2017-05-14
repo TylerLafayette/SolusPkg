@@ -3,6 +3,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import json
+import os
 
 class Base:
     def destroy(self, widget, data=None):
@@ -16,7 +17,11 @@ class Base:
         self.chooser.set_action(gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER)
         response = self.chooser.run()
         if response == gtk.RESPONSE_OK:
-            print self.chooser.get_filename(), 'selected'
+            self.path = self.chooser.get_filename()
+            if os.path.isfile(self.path + '/settings.json'):
+                print 'JSON exists'
+            else:
+                print 'No JSON present'
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected'
         self.chooser.destroy()
