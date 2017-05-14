@@ -8,6 +8,7 @@ import os
 class Base:
     def destroy(self, widget, data=None):
         gtk.main_quit()
+
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
 
@@ -52,6 +53,7 @@ class Base:
         self.window.resize(600, 400)
         self.window.show_all()
         self.window.connect("destroy", self.destroy)
+
     def promptFolder(self, btn=None, recurse=False):
         if recurse == False:
             self.chooser = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
@@ -78,6 +80,7 @@ class Base:
         elif response == gtk.RESPONSE_CANCEL:
             print 'No folder selected'
             self.chooser.destroy()
+
     def createSaveDialog(self):
         self.saveDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SAVE,
                                   buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
@@ -85,6 +88,7 @@ class Base:
         filter.set_name("Solus Package")
         filter.add_pattern("*.sol")
         self.saveDialog.add_filter(filter)
+
     def promptOutput(self, btn=None, recurse=False):
         if recurse == False:
             self.createSaveDialog()
