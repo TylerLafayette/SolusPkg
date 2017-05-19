@@ -1,48 +1,50 @@
 from zipfile import ZipFile
-import pygtk
-pygtk.require('2.0')
-import gtk
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 import json
+import sys
 import os
 
 class Base:
     def destroy(self, widget, data=None):
-        gtk.main_quit()
+        Gtk.main_quit()
+        sys.exit()
 
     def __init__(self):
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window = Gtk.Window()
 
         # Boxes
-        self.box0 = gtk.VBox()
-        self.box1 = gtk.HBox()
-        self.box0.pack_start(self.box1, fill=False)
+        self.box0 = Gtk.VBox()
+        self.box1 = Gtk.HBox()
+        self.box0.pack_start(self.box1, False, True, 30)
 
         # Widgets
 
             # -Prompt Button
-        self.promptBtn = gtk.Button(label="Choose folder")
+        self.promptBtn = Gtk.Button(label="Choose folder")
         self.promptBtn.set_size_request(200,100)
         self.promptBtn.connect("clicked", self.promptFolder)
-        self.box1.pack_start(self.promptBtn, fill=False)
+        self.box1.pack_start(self.promptBtn, True, False, 0)
 
             # -Output Button
-        self.outputBtn = gtk.Button(label="Choose output")
+        self.outputBtn = Gtk.Button(label="Choose output")
         self.outputBtn.set_sensitive(False)
         self.outputBtn.set_size_request(200,100)
         self.outputBtn.connect("clicked", self.promptOutput)
-        self.box1.pack_start(self.outputBtn, fill=False)
+        self.box1.pack_start(self.outputBtn, True, False, 0)
 
             # -Folder label
-        self.folderLabel = gtk.Label("Nothing selected...")
-        self.box0.pack_start(self.folderLabel, fill=False)
+        self.folderLabel = Gtk.Label("Nothing selected...")
+        self.box0.pack_start(self.folderLabel, True, False, 0)
 
             # -File Chooser
-        self.chooser = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+        self.chooser = Gtk.FileChooserDialog(title=None,action=Gtk.FileChooserAction.SELECT_FOLDER,
+                                  buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK))
 
             # -File Saver
-        self.saveDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SAVE,
-                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
+        self.saveDialog = Gtk.FileChooserDialog(title=None,action=Gtk.FileChooserAction.SAVE,
+                                  buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE,Gtk.ResponseType.OK))
 
         self.promptBtn.show()
         self.folderLabel.show()
@@ -52,39 +54,39 @@ class Base:
         self.window.set_title("Solus Package Creator")
         self.window.resize(600, 400)
         self.window.show_all()
-        self.window.connect("destroy", self.destroy)
+        self.window.connect("delete-event", self.destroy)
+        Gtk.main()
 
     def promptFolder(self, btn=None, recurse=False):
         if recurse == False:
-            self.chooser = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER,
-                                          buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_OPEN,gtk.RESPONSE_OK))
+            self.chooser = Gtk.FileChooserDialog(title=None,action=Gtk.FileChooserAction.SELECT_FOLDER,
+                                      buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_OPEN,Gtk.ResponseType.OK))
         response = self.chooser.run()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             self.path = self.chooser.get_filename()
             if os.path.isfile(self.path + '/settings.json'):
                 self.chooser.destroy()
                 self.outputBtn.set_sensitive(True)
                 self.folderLabel.set_label(self.path)
             else:
-                message = gtk.MessageDialog(parent=None,
+                message = Gtk.MessageDialog(parent=None,
                             flags=0,
-                            type=gtk.MESSAGE_ERROR,
-                            buttons=gtk.BUTTONS_OK,
-                            message_format=None)
+                            type=Gtk.MessageType.ERROR,
+                            buttons=(Gtk.STOCK_OK, Gtk.ResponseType.OK))
                 message.set_markup("No configuration file detected within directory.")
                 response = message.run()
-                if response == gtk.RESPONSE_OK:
+                if response == Gtk.ResponseType.OK:
                     message.destroy()
                     # self.chooser.destroy()
                     self.promptFolder(recurse=True)
-        elif response == gtk.RESPONSE_CANCEL:
-            print 'No folder selected'
+        elif response == Gtk.ResponseType.CANCEL:
+            print('No folder selected')
             self.chooser.destroy()
 
     def createSaveDialog(self):
-        self.saveDialog = gtk.FileChooserDialog(title=None,action=gtk.FILE_CHOOSER_ACTION_SAVE,
-                                  buttons=(gtk.STOCK_CANCEL,gtk.RESPONSE_CANCEL,gtk.STOCK_SAVE,gtk.RESPONSE_OK))
-        filter = gtk.FileFilter()
+        self.saveDialog = Gtk.FileChooserDialog(title=None,action=Gtk.FileChooserAction.SAVE,
+                                  buttons=(Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL,Gtk.STOCK_SAVE,Gtk.ResponseType.OK))
+        filter = Gtk.FileFilter()
         filter.set_name("Solus Package")
         filter.add_pattern("*.sol")
         self.saveDialog.add_filter(filter)
@@ -93,25 +95,18 @@ class Base:
         if recurse == False:
             self.createSaveDialog()
         response = self.saveDialog.run()
-        if response == gtk.RESPONSE_OK:
+        if response == Gtk.ResponseType.OK:
             self.filename = self.saveDialog.get_filename()
             if not self.filename[-4:] == '.sol':
                 self.filename += '.sol'
             createPkg(self.filename, self.path)
-        elif response == gtk.RESPONSE_CANCEL:
-            print 'No folder selected'
         self.saveDialog.destroy()
     def main(self):
-        gtk.main()
+        Gtk.main()
 
 def createPkg(filename, folder):
     with ZipFile(filename, 'w') as pkg:
         for dirname, subdirs, files in os.walk(folder):
-            print dirname
-            print 'sub'
-            print subdirs
-            print 'fi'
-            print files
             relDir = os.path.relpath(dirname, folder)
             pkg.write(dirname, relDir)
             for file in files:
